@@ -64,7 +64,9 @@
           "default": {
             "heading": {
               "color": "#ff7f50",
-              "fontweight": "700"
+              "fontweight": "700",
+              "outline": "1px solid #ff7f5033",
+              "borderRadius": "3px"
             },
             "blockquote": {
               "color": "#6aa6ff",
@@ -79,7 +81,8 @@
             },
             "italic": {
               "color": "#2ec4b6",
-              "decoration": "underline dotted #2ec4b655"
+              "decoration": "underline dotted #2ec4b655",
+              "fontstyle": "italic"
             },
             "strikethrough": {
               "color": "#f28482",
@@ -92,11 +95,14 @@
             "inlineCode": {
               "background": "#1f1f1f66",
               "color": "#9ef01a",
-              "fontweight": "600"
+              "fontweight": "600",
+              "border": "1px solid #9ef01a55",
+              "borderRadius": "4px"
             },
             "codeFence": {
               "background": "#0b254566",
-              "color": "#caf0f8"
+              "color": "#caf0f8",
+              "border": "1px solid #caf0f833"
             }
           },
           "markdownDescription": "%configuration.styles.description%"

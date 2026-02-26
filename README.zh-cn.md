@@ -20,6 +20,12 @@
   - `color`
   - `decoration`
   - `fontweight`
+  - `fontstyle`
+  - `border`、`borderColor`、`borderRadius`、`borderStyle`、`borderWidth`
+  - `outline`、`outlineColor`、`outlineStyle`、`outlineWidth`
+  - `opacity`、`letterSpacing`
+  - `gutterIconPath`、`gutterIconSize`
+  - 嵌套 `before` / `after`（附加文本/图标与样式）
 
 ## 命令
 
@@ -33,20 +39,45 @@
   "colorful-markdown.styles": {
     "heading": {
       "color": "#ff7f50",
-      "fontweight": "800"
+      "fontweight": "800",
+      "outline": "1px solid #ff7f5033",
+      "borderRadius": "3px",
+      "before": {
+        "contentText": "# ",
+        "color": "#ff7f50aa"
+      }
     },
     "blockquote": {
       "color": "#6aa6ff",
       "decoration": "underline wavy #6aa6ff66"
     },
+    "italic": {
+      "color": "#2ec4b6",
+      "fontstyle": "italic"
+    },
     "inlineCode": {
       "background": "#1f1f1f66",
       "color": "#9ef01a",
-      "fontweight": "600"
+      "fontweight": "600",
+      "border": "1px solid #9ef01a55",
+      "borderRadius": "4px"
+    },
+    "link": {
+      "color": "#4cc9f0",
+      "decoration": "underline",
+      "after": {
+        "contentText": " ->",
+        "color": "#4cc9f0aa",
+        "fontstyle": "italic",
+        "margin": "0 0 0 .2em"
+      }
     }
   }
 }
 ```
+
+`gutterIconPath` 需要是绝对路径（或 URI），用于在编辑器左侧 gutter 显示图标。
+`before` / `after` 支持：`contentText`、`contentIconPath`、`color`、`background`、`fontweight`、`fontstyle`、`decoration`、`border`、`borderColor`、`margin`、`width`、`height`。
 
 ## 开发
 
