@@ -1,3 +1,7 @@
 {
-  "extension.category": "JetBrains Titlebar"
+  "extension.category": "Colorful Markdown",
+  "command.refreshStyles.title": "Refresh Markdown Colors",
+  "configuration.title": "Colorful Markdown",
+  "configuration.enabled.description": "Enable markdown element coloring.",
+  "configuration.styles.description": "JSON style map for markdown elements (heading, blockquote, list, bold, italic, strikethrough, link, inlineCode, codeFence). Each item supports background, color, decoration and fontweight."
 }

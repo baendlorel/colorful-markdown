@@ -44,7 +44,7 @@ const options = [
         file: 'out/extension.js',
         format: 'cjs',
         sourcemap: IS_DEV,
-        name: 'JetBrains Titlebar',
+        name: 'Colorful Markdown',
         globals: {
           vscode: 'vscode',
         },
@@ -84,7 +84,7 @@ const options = [
             },
           }),
     ].filter(Boolean),
-    external: [],
+    external: ['vscode'],
   },
 ];
 
