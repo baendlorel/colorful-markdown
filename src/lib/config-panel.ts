@@ -1,4 +1,4 @@
-import { commands, ExtensionContext, ViewColumn, Webview, WebviewPanel, window, workspace } from 'vscode';
+import { commands, ExtensionContext, Uri, ViewColumn, Webview, WebviewPanel, window, workspace } from 'vscode';
 import { Cfg } from './config.js';
 import { CONFIG_ROOT, OPEN_CONFIG_COMMAND, REFRESH_COMMAND } from './commands.js';
 import { DEFAULT_STYLES, MARKDOWN_ELEMENTS, MarkdownElement, STYLE_PRESETS } from './markdown-style.js';
@@ -130,6 +130,10 @@ export const registerConfigPanel = (context: ExtensionContext) => {
         retainContextWhenHidden: true,
       },
     );
+    panel.iconPath = {
+      light: Uri.joinPath(context.extensionUri, 'assets', 'config-gear-light.svg'),
+      dark: Uri.joinPath(context.extensionUri, 'assets', 'config-gear-dark.svg'),
+    };
 
     panel.webview.html = renderWebview(panel.webview, readStyles());
 
