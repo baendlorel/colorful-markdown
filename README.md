@@ -5,8 +5,16 @@ Color markdown elements in VS Code with configurable styles.
 ## Features
 
 - Works in the markdown editor (real-time)
+- Built-in presets in config page: `One Dark Colorful`, `GitHub Cool`, `Ayu Soft`
+- Default style map is empty until you apply a preset or custom styles
 - Supports these elements:
   - `heading`
+  - `heading1`
+  - `heading2`
+  - `heading3`
+  - `heading4`
+  - `heading5`
+  - `heading6`
   - `blockquote`
   - `list`
   - `bold`

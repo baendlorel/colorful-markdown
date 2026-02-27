@@ -23,8 +23,14 @@ import {
 
 const MARKDOWN_RULES: Readonly<Record<MarkdownElement, RegExp>> = {
   heading: /^#{1,6}[ \t]+.*$/gm,
+  heading1: /^#[ \t]+.*$/gm,
+  heading2: /^##[ \t]+.*$/gm,
+  heading3: /^###[ \t]+.*$/gm,
+  heading4: /^####[ \t]+.*$/gm,
+  heading5: /^#####[ \t]+.*$/gm,
+  heading6: /^######[ \t]+.*$/gm,
   blockquote: /^>+[ \t]?.*$/gm,
-  list: /^[ \t]*(?:[-+*]|\d+\.)[ \t]+.*$/gm,
+  list: /^[ \t]*(?:[-+*]|\d+\.)[ \t]+/gm,
   bold: /\*\*[^*\n]+\*\*|__[^_\n]+__/g,
   italic: /(?<!\*)\*[^*\n]+\*(?!\*)|(?<!_)_[^_\n]+_(?!_)/g,
   strikethrough: /~~[^~\n]+~~/g,

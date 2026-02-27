@@ -1,7 +1,7 @@
 import { commands, ExtensionContext, ViewColumn, Webview, WebviewPanel, window, workspace } from 'vscode';
 import { Cfg } from './config.js';
 import { CONFIG_ROOT, OPEN_CONFIG_COMMAND, REFRESH_COMMAND } from './commands.js';
-import { DEFAULT_STYLES, MARKDOWN_ELEMENTS, MarkdownElement } from './markdown-style.js';
+import { DEFAULT_STYLES, MARKDOWN_ELEMENTS, MarkdownElement, STYLE_PRESETS } from './markdown-style.js';
 import configTemplate from '../webview/config.template.html';
 
 type WebviewStyleMap = Record<MarkdownElement, Record<string, unknown>>;
@@ -73,6 +73,7 @@ const renderWebview = (webview: Webview, styles: WebviewStyleMap) => {
     .replace('__NONCE__', nonce)
     .replace('__MARKDOWN_ELEMENTS__', toInlineJson(MARKDOWN_ELEMENTS))
     .replace('__DEFAULT_STYLES__', toInlineJson(DEFAULT_STYLES))
+    .replace('__STYLE_PRESETS__', toInlineJson(STYLE_PRESETS))
     .replace('__INITIAL_STYLES__', toInlineJson(styles));
 };
 

@@ -4,5 +4,5 @@
   "command.openConfig.title": "Open Style Config",
   "configuration.title": "Colorful Markdown",
   "configuration.enabled.description": "Enable markdown element coloring.",
-  "configuration.styles.description": "JSON style map for markdown elements (heading, blockquote, list, bold, italic, strikethrough, link, inlineCode, codeFence). Supported fields include background/color/decoration/fontweight/fontstyle, border fields, outline fields, gutterIconPath/gutterIconSize (absolute path required), and nested before/after attachment options."
+  "configuration.styles.description": "JSON style map for markdown elements (heading, heading1, heading2, heading3, heading4, heading5, heading6, blockquote, list, bold, italic, strikethrough, link, inlineCode, codeFence). Default map is empty. You can apply presets in the config page (One Dark Colorful, GitHub Cool, Ayu Soft). Supported fields include background/color/decoration/fontweight/fontstyle, border fields, outline fields, gutterIconPath/gutterIconSize (absolute path required), and nested before/after attachment options."
 }

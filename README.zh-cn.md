@@ -5,8 +5,16 @@
 ## 功能
 
 - 在 Markdown 编辑器中实时上色
+- 配置页面内置预设：`One Dark Colorful`、`GitHub Cool`、`Ayu Soft`
+- 默认样式映射为空，需应用预设或手动设置后生效
 - 支持元素：
   - `heading`
+  - `heading1`
+  - `heading2`
+  - `heading3`
+  - `heading4`
+  - `heading5`
+  - `heading6`
   - `blockquote`
   - `list`
   - `bold`
