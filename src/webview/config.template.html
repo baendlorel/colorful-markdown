@@ -76,6 +76,23 @@
       color: var(--vscode-errorForeground);
     }
 
+    .filter-wrap {
+      margin: -8px 0 14px;
+    }
+
+    .filter-input {
+      width: 100%;
+      max-width: 420px;
+      border: 1px solid var(--vscode-input-border, var(--cm-border));
+      border-radius: 6px;
+      padding: 6px 10px;
+      box-sizing: border-box;
+      color: var(--vscode-input-foreground);
+      background: var(--vscode-input-background);
+      font-family: var(--vscode-font-family);
+      font-size: 0.9rem;
+    }
+
     .cards {
       display: grid;
       grid-template-columns: 1fr;
@@ -186,6 +203,10 @@
     .hidden {
       display: none;
     }
+
+    .hidden-by-filter {
+      display: none;
+    }
   </style>
 </head>
 
@@ -204,6 +225,14 @@
       <button id="apply-preset" class="secondary">Apply Preset</button>
       <button id="toggle-advanced" class="secondary">Toggle Advanced Options</button>
       <span id="status" class="status" role="status"></span>
+    </div>
+    <div class="filter-wrap">
+      <input
+        id="filter-input"
+        class="filter-input"
+        type="text"
+        placeholder="Filter items, e.g. heading / h1 / code"
+      />
     </div>
     <section id="cards" class="cards"></section>
   </main>
@@ -224,6 +253,7 @@
       const presetSelect = document.getElementById('preset-select');
       const applyPresetButton = document.getElementById('apply-preset');
       const toggleAdvancedButton = document.getElementById('toggle-advanced');
+      const filterInput = document.getElementById('filter-input');
 
       const SAMPLE_TEXT = {
         heading: '# Base Heading',
@@ -347,6 +377,17 @@
       const previews = new Map();
       const cardStates = new Map();
       let showAdvanced = false;
+
+      const ELEMENT_FILTER_ALIASES = {
+        heading: 'title',
+        heading1: 'h1 #',
+        heading2: 'h2 ##',
+        heading3: 'h3 ###',
+        heading4: 'h4 ####',
+        heading5: 'h5 #####',
+        heading6: 'h6 ######',
+        blockquote: 'quote',
+      };
 
       const isRecord = (value) => !!value && typeof value === 'object' && !Array.isArray(value);
 
@@ -562,7 +603,6 @@
             };
           }
           if (parsed.unset) {
-            setNested(style, field.path, null);
             continue;
           }
           setNested(style, field.path, parsed.value);
@@ -620,6 +660,19 @@
           renderFieldsForElement(element);
         }
         updateToggleAdvancedMeta();
+        applyElementFilter();
+      };
+
+      const applyElementFilter = () => {
+        const keyword = filterInput.value.trim().toLowerCase();
+        markdownElements.forEach((element) => {
+          const state = cardStates.get(element);
+          if (!state) {
+            return;
+          }
+          const isVisible = keyword.length === 0 || state.searchText.includes(keyword);
+          state.card.classList.toggle('hidden-by-filter', !isVisible);
+        });
       };
 
       const updatePreview = (element) => {
@@ -705,7 +758,11 @@
           fieldControls.push({ field, labelCell, inputCell });
         }
 
-        cardStates.set(element, { body, fieldControls });
+        const searchText = `${element} ${ELEMENT_FILTER_ALIASES[element] ?? ''} ${fieldControls
+          .map((control) => control.field.label)
+          .join(' ')}`.toLowerCase();
+
+        cardStates.set(element, { card, body, fieldControls, searchText });
         table.appendChild(body);
 
         card.appendChild(title);
@@ -751,7 +808,9 @@
               message: result.message,
             };
           }
-          nextStyles[element] = result.style;
+          if (Object.keys(result.style).length > 0) {
+            nextStyles[element] = result.style;
+          }
         }
         return {
           ok: true,
@@ -812,6 +871,10 @@
           toStatePayload(currentState && isRecord(currentState.styles) ? currentState.styles : initialStyles),
         );
         setStatus(showAdvanced ? 'Advanced options shown.' : 'Advanced options hidden.');
+      });
+
+      filterInput.addEventListener('input', () => {
+        applyElementFilter();
       });
 
       window.addEventListener('message', (event) => {

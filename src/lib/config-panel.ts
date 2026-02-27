@@ -4,7 +4,7 @@ import { CONFIG_ROOT, OPEN_CONFIG_COMMAND, REFRESH_COMMAND } from './commands.js
 import { DEFAULT_STYLES, MARKDOWN_ELEMENTS, MarkdownElement, STYLE_PRESETS } from './markdown-style.js';
 import configTemplate from '../webview/config.template.html';
 
-type WebviewStyleMap = Record<MarkdownElement, Record<string, unknown>>;
+type WebviewStyleMap = Partial<Record<MarkdownElement, Record<string, unknown>>>;
 
 type WebviewMessage = {
   type: 'saveStyles' | 'requestStyles';
@@ -15,12 +15,36 @@ const isRecord = (value: unknown): value is Record<string, unknown> => {
   return !!value && typeof value === 'object' && !Array.isArray(value);
 };
 
+const compactObject = (value: unknown): Record<string, unknown> | undefined => {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+  const compacted: Record<string, unknown> = {};
+  Object.entries(value).forEach(([key, entry]) => {
+    if (entry === null || entry === undefined) {
+      return;
+    }
+    if (isRecord(entry)) {
+      const nested = compactObject(entry);
+      if (nested && Object.keys(nested).length > 0) {
+        compacted[key] = nested;
+      }
+      return;
+    }
+    compacted[key] = entry;
+  });
+  return Object.keys(compacted).length > 0 ? compacted : undefined;
+};
+
 const readStyles = (): WebviewStyleMap => {
   const raw = Cfg.get<Record<string, unknown>>('styles', {});
-  const styles = {} as WebviewStyleMap;
+  const styles: WebviewStyleMap = {};
   MARKDOWN_ELEMENTS.forEach((element) => {
     const value = raw[element];
-    styles[element] = isRecord(value) ? value : {};
+    const compacted = compactObject(value);
+    if (compacted) {
+      styles[element] = compacted;
+    }
   });
   return styles;
 };
@@ -42,10 +66,13 @@ const sanitizeStyles = (value: unknown): WebviewStyleMap | undefined => {
   if (!isRecord(value)) {
     return undefined;
   }
-  const styles = {} as WebviewStyleMap;
+  const styles: WebviewStyleMap = {};
   MARKDOWN_ELEMENTS.forEach((element) => {
     const entry = value[element];
-    styles[element] = isRecord(entry) ? entry : {};
+    const compacted = compactObject(entry);
+    if (compacted) {
+      styles[element] = compacted;
+    }
   });
   return styles;
 };
