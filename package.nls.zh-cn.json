@@ -4,5 +4,5 @@
   "command.openConfig.title": "打开样式配置",
   "configuration.title": "Colorful Markdown",
   "configuration.enabled.description": "启用 Markdown 元素上色。",
-  "configuration.styles.description": "Markdown 元素样式映射（heading、heading1、heading2、heading3、heading4、heading5、heading6、blockquote、list、bold、italic、strikethrough、link、inlineCode、codeFence）。默认映射为空，可在配置页面应用预设（One Dark Colorful、GitHub Cool、Ayu Soft）。支持 background/color/decoration/fontweight/fontstyle、border 系列、outline 系列、gutterIconPath/gutterIconSize（gutterIconPath 需绝对路径），以及嵌套 before/after 附加内容配置。"
+  "configuration.styles.description": "Markdown 元素样式映射（heading、heading1、heading2、heading3、heading4、heading5、heading6、blockquote、list、bold、italic、strikethrough、link、inlineCode、codeFence）。默认映射为空，可在配置页面应用亮/暗预设（One Dark/Light Colorful、GitHub Dark/Light Cool、Ayu Dark/Light Pastel）。支持 background/color/decoration/fontweight/fontstyle、border 系列、outline 系列、gutterIconPath/gutterIconSize（gutterIconPath 需绝对路径），以及嵌套 before/after 附加内容配置。"
 }

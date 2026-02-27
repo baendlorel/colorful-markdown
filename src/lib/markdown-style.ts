@@ -58,11 +58,20 @@ export type MarkdownAttachmentStyle = {
   height?: string;
 };
 
-export type StylePresetId = 'one-dark' | 'github-cool' | 'ayu-soft';
+export type StylePresetMode = 'dark' | 'light';
+
+export type StylePresetId =
+  | 'one-dark'
+  | 'one-light'
+  | 'github-dark'
+  | 'github-light'
+  | 'ayu-dark'
+  | 'ayu-light';
 
 export type StylePreset = {
   id: StylePresetId;
   label: string;
+  mode: StylePresetMode;
   styles: Readonly<Record<MarkdownElement, MarkdownStyle>>;
 };
 
@@ -92,17 +101,17 @@ export const DEFAULT_STYLES: Readonly<Record<MarkdownElement, MarkdownStyle>> = 
 
 const ONE_DARK_STYLES = createPresetStyles({
   heading: {
-    color: '#c8ccd4',
+    color: '#e5c07b',
     fontweight: '700',
-    outline: '1px solid #3e4451',
+    outline: '1px solid #3f4657',
     borderRadius: '3px',
   },
-  heading1: { color: '#e06c75', fontweight: '800' },
-  heading2: { color: '#d19a66', fontweight: '780' },
-  heading3: { color: '#e5c07b', fontweight: '760' },
-  heading4: { color: '#98c379', fontweight: '740' },
-  heading5: { color: '#61afef', fontweight: '720' },
-  heading6: { color: '#c678dd', fontweight: '700' },
+  heading1: { color: '#ff7a90', fontweight: '820' },
+  heading2: { color: '#ffb86c', fontweight: '800' },
+  heading3: { color: '#f9e2af', fontweight: '780' },
+  heading4: { color: '#9ece6a', fontweight: '760' },
+  heading5: { color: '#7dcfff', fontweight: '740' },
+  heading6: { color: '#c4a7e7', fontweight: '720' },
   blockquote: {
     color: '#56b6c2',
     decoration: 'underline wavy #56b6c266',
@@ -112,61 +121,61 @@ const ONE_DARK_STYLES = createPresetStyles({
     },
   },
   list: { color: '#d19a66' },
-  bold: { color: '#e06c75', fontweight: '700' },
+  bold: { color: '#ff7a90', fontweight: '700' },
   italic: {
     color: '#98c379',
     decoration: 'underline dotted #98c37966',
     fontstyle: 'italic',
   },
-  strikethrough: { color: '#be5046', decoration: 'line-through' },
+  strikethrough: { color: '#f7768e', decoration: 'line-through' },
   link: { color: '#61afef', decoration: 'underline' },
   inlineCode: {
     color: '#e5c07b',
-    background: '#2c313a',
+    background: '#2b313f',
     fontweight: '600',
-    border: '1px solid #3e4451',
+    border: '1px solid #434c5e',
     borderRadius: '4px',
   },
   codeFence: {
-    color: '#abb2bf',
-    background: '#21252b',
-    border: '1px solid #3e4451',
+    color: '#c8d3f5',
+    background: '#1f2430',
+    border: '1px solid #434c5e',
   },
 });
 
-const GITHUB_COOL_STYLES = createPresetStyles({
+const ONE_LIGHT_STYLES = createPresetStyles({
   heading: {
-    color: '#57606a',
+    color: '#8a5a00',
     fontweight: '700',
-    outline: '1px solid #d0d7de',
+    outline: '1px solid #d8dee9',
     borderRadius: '3px',
   },
-  heading1: { color: '#0a3069', fontweight: '800' },
-  heading2: { color: '#0550ae', fontweight: '780' },
-  heading3: { color: '#0969da', fontweight: '760' },
-  heading4: { color: '#1f6feb', fontweight: '740' },
-  heading5: { color: '#218bff', fontweight: '720' },
-  heading6: { color: '#54aeff', fontweight: '700' },
+  heading1: { color: '#c43e1d', fontweight: '820' },
+  heading2: { color: '#b65c00', fontweight: '800' },
+  heading3: { color: '#8a7a00', fontweight: '780' },
+  heading4: { color: '#2f8f5b', fontweight: '760' },
+  heading5: { color: '#1477b3', fontweight: '740' },
+  heading6: { color: '#8250df', fontweight: '720' },
   blockquote: {
-    color: '#57606a',
-    decoration: 'underline wavy #57606a66',
+    color: '#0f6b8f',
+    decoration: 'underline wavy #0f6b8f66',
     before: {
       contentText: '| ',
-      color: '#8c959faa',
+      color: '#0f6b8faa',
     },
   },
-  list: { color: '#0969da' },
-  bold: { color: '#24292f', fontweight: '700' },
+  list: { color: '#b65c00' },
+  bold: { color: '#c43e1d', fontweight: '700' },
   italic: {
-    color: '#1f6feb',
-    decoration: 'underline dotted #1f6feb66',
+    color: '#2f8f5b',
+    decoration: 'underline dotted #2f8f5b66',
     fontstyle: 'italic',
   },
-  strikethrough: { color: '#6e7781', decoration: 'line-through' },
+  strikethrough: { color: '#a2405e', decoration: 'line-through' },
   link: { color: '#0969da', decoration: 'underline' },
   inlineCode: {
-    color: '#0550ae',
-    background: '#eaeef2',
+    color: '#8250df',
+    background: '#eef2ff',
     fontweight: '600',
     border: '1px solid #d0d7de',
     borderRadius: '4px',
@@ -178,19 +187,107 @@ const GITHUB_COOL_STYLES = createPresetStyles({
   },
 });
 
-const AYU_SOFT_STYLES = createPresetStyles({
+const GITHUB_DARK_STYLES = createPresetStyles({
   heading: {
-    color: '#cbccc6',
+    color: '#79c0ff',
+    fontweight: '700',
+    outline: '1px solid #30363d',
+    borderRadius: '3px',
+  },
+  heading1: { color: '#ff7b72', fontweight: '820' },
+  heading2: { color: '#ffa657', fontweight: '800' },
+  heading3: { color: '#e3b341', fontweight: '780' },
+  heading4: { color: '#7ee787', fontweight: '760' },
+  heading5: { color: '#79c0ff', fontweight: '740' },
+  heading6: { color: '#d2a8ff', fontweight: '720' },
+  blockquote: {
+    color: '#8b949e',
+    decoration: 'underline wavy #8b949e66',
+    before: {
+      contentText: '| ',
+      color: '#8b949eaa',
+    },
+  },
+  list: { color: '#ffa657' },
+  bold: { color: '#ff7b72', fontweight: '700' },
+  italic: {
+    color: '#7ee787',
+    decoration: 'underline dotted #7ee78766',
+    fontstyle: 'italic',
+  },
+  strikethrough: { color: '#8b949e', decoration: 'line-through' },
+  link: { color: '#58a6ff', decoration: 'underline' },
+  inlineCode: {
+    color: '#79c0ff',
+    background: '#21262d',
+    fontweight: '600',
+    border: '1px solid #30363d',
+    borderRadius: '4px',
+  },
+  codeFence: {
+    color: '#c9d1d9',
+    background: '#161b22',
+    border: '1px solid #30363d',
+  },
+});
+
+const GITHUB_LIGHT_STYLES = createPresetStyles({
+  heading: {
+    color: '#0969da',
+    fontweight: '700',
+    outline: '1px solid #d0d7de',
+    borderRadius: '3px',
+  },
+  heading1: { color: '#cf222e', fontweight: '820' },
+  heading2: { color: '#bc4c00', fontweight: '800' },
+  heading3: { color: '#9a6700', fontweight: '780' },
+  heading4: { color: '#116329', fontweight: '760' },
+  heading5: { color: '#0969da', fontweight: '740' },
+  heading6: { color: '#8250df', fontweight: '720' },
+  blockquote: {
+    color: '#57606a',
+    decoration: 'underline wavy #57606a66',
+    before: {
+      contentText: '| ',
+      color: '#8c959faa',
+    },
+  },
+  list: { color: '#bc4c00' },
+  bold: { color: '#cf222e', fontweight: '700' },
+  italic: {
+    color: '#116329',
+    decoration: 'underline dotted #11632966',
+    fontstyle: 'italic',
+  },
+  strikethrough: { color: '#6e7781', decoration: 'line-through' },
+  link: { color: '#0969da', decoration: 'underline' },
+  inlineCode: {
+    color: '#8250df',
+    background: '#f6f8fa',
+    fontweight: '600',
+    border: '1px solid #d0d7de',
+    borderRadius: '4px',
+  },
+  codeFence: {
+    color: '#24292f',
+    background: '#f6f8fa',
+    border: '1px solid #d8dee4',
+  },
+});
+
+const AYU_DARK_STYLES = createPresetStyles({
+  heading: {
+    color: '#ffd580',
     fontweight: '700',
     outline: '1px solid #5c677388',
     borderRadius: '3px',
   },
-  heading1: { color: '#ffad66', fontweight: '800' },
-  heading2: { color: '#ffd580', fontweight: '780' },
-  heading3: { color: '#bae67e', fontweight: '760' },
-  heading4: { color: '#95e6cb', fontweight: '740' },
-  heading5: { color: '#73d0ff', fontweight: '720' },
-  heading6: { color: '#d4bfff', fontweight: '700' },
+  heading1: { color: '#ffad66', fontweight: '820' },
+  heading2: { color: '#ffd173', fontweight: '800' },
+  heading3: { color: '#d5ff80', fontweight: '780' },
+  heading4: { color: '#95e6cb', fontweight: '760' },
+  heading5: { color: '#73d0ff', fontweight: '740' },
+  heading6: { color: '#dfbfff', fontweight: '720' },
   blockquote: {
     color: '#95e6cb',
     decoration: 'underline wavy #95e6cb66',
@@ -199,7 +296,7 @@ const AYU_SOFT_STYLES = createPresetStyles({
       color: '#95e6cbaa',
     },
   },
-  list: { color: '#ffd580' },
+  list: { color: '#ffcc66' },
   bold: { color: '#ffad66', fontweight: '700' },
   italic: {
     color: '#bae67e',
@@ -207,18 +304,62 @@ const AYU_SOFT_STYLES = createPresetStyles({
     fontstyle: 'italic',
   },
   strikethrough: { color: '#f28779', decoration: 'line-through' },
-  link: { color: '#73d0ff', decoration: 'underline' },
+  link: { color: '#59c2ff', decoration: 'underline' },
   inlineCode: {
-    color: '#ffd580',
-    background: '#1f2430',
+    color: '#ffd173',
+    background: '#232834',
     fontweight: '600',
     border: '1px solid #5c6773',
     borderRadius: '4px',
   },
   codeFence: {
-    color: '#cbccc6',
-    background: '#242936',
+    color: '#cccac2',
+    background: '#1f2430',
     border: '1px solid #5c6773',
+  },
+});
+
+const AYU_LIGHT_STYLES = createPresetStyles({
+  heading: {
+    color: '#b26d00',
+    fontweight: '700',
+    outline: '1px solid #d6dae5',
+    borderRadius: '3px',
+  },
+  heading1: { color: '#c76a00', fontweight: '820' },
+  heading2: { color: '#b88a00', fontweight: '800' },
+  heading3: { color: '#7a9a01', fontweight: '780' },
+  heading4: { color: '#2b8a78', fontweight: '760' },
+  heading5: { color: '#2f6ab0', fontweight: '740' },
+  heading6: { color: '#7d59c4', fontweight: '720' },
+  blockquote: {
+    color: '#3d7b8a',
+    decoration: 'underline wavy #3d7b8a66',
+    before: {
+      contentText: '| ',
+      color: '#3d7b8aaa',
+    },
+  },
+  list: { color: '#b88a00' },
+  bold: { color: '#c76a00', fontweight: '700' },
+  italic: {
+    color: '#4a8d43',
+    decoration: 'underline dotted #4a8d4366',
+    fontstyle: 'italic',
+  },
+  strikethrough: { color: '#b25555', decoration: 'line-through' },
+  link: { color: '#2f6ab0', decoration: 'underline' },
+  inlineCode: {
+    color: '#7d59c4',
+    background: '#f3f5fa',
+    fontweight: '600',
+    border: '1px solid #d6dae5',
+    borderRadius: '4px',
+  },
+  codeFence: {
+    color: '#334155',
+    background: '#f5f7fb',
+    border: '1px solid #d6dae5',
   },
 });
 
@@ -226,16 +367,37 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
   {
     id: 'one-dark',
     label: 'One Dark Colorful',
+    mode: 'dark',
     styles: ONE_DARK_STYLES,
   },
   {
-    id: 'github-cool',
-    label: 'GitHub Cool',
-    styles: GITHUB_COOL_STYLES,
+    id: 'github-dark',
+    label: 'GitHub Dark Rich',
+    mode: 'dark',
+    styles: GITHUB_DARK_STYLES,
   },
   {
-    id: 'ayu-soft',
-    label: 'Ayu Soft',
-    styles: AYU_SOFT_STYLES,
+    id: 'ayu-dark',
+    label: 'Ayu Dark Pastel',
+    mode: 'dark',
+    styles: AYU_DARK_STYLES,
+  },
+  {
+    id: 'one-light',
+    label: 'One Light Colorful',
+    mode: 'light',
+    styles: ONE_LIGHT_STYLES,
+  },
+  {
+    id: 'github-light',
+    label: 'GitHub Light Cool',
+    mode: 'light',
+    styles: GITHUB_LIGHT_STYLES,
+  },
+  {
+    id: 'ayu-light',
+    label: 'Ayu Light Pastel',
+    mode: 'light',
+    styles: AYU_LIGHT_STYLES,
   },
 ];

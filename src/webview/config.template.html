@@ -167,16 +167,6 @@
       white-space: pre-wrap;
     }
 
-    .preview-note {
-      margin-top: 8px;
-      font-size: 0.8rem;
-      color: var(--vscode-descriptionForeground);
-    }
-
-    .preview-note.error {
-      color: var(--vscode-errorForeground);
-    }
-
     .preview-icon {
       width: 1em;
       height: 1em;
@@ -203,7 +193,8 @@
   <main>
     <h1>Colorful Markdown Style Config</h1>
     <p>
-      Default styles are empty. Choose a preset theme or edit manually. Simple options are shown by default.
+      Default styles are empty. Choose a light/dark preset theme or edit manually. Simple options are shown by
+      default.
     </p>
     <div class="actions">
       <button id="save">Save</button>
@@ -372,17 +363,18 @@
       };
 
       const normalizedPresets = Array.isArray(stylePresets)
-        ? stylePresets.filter((preset) => isRecord(preset) && typeof preset.id === 'string' && isRecord(preset.styles))
+        ? stylePresets
+            .filter((preset) => isRecord(preset) && typeof preset.id === 'string' && isRecord(preset.styles))
+            .map((preset) => ({
+              id: preset.id,
+              label: typeof preset.label === 'string' ? preset.label : preset.id,
+              mode: preset.mode === 'light' ? 'light' : 'dark',
+              styles: preset.styles,
+            }))
         : [];
 
       const renderPresetOptions = () => {
         clearNode(presetSelect);
-        normalizedPresets.forEach((preset) => {
-          const option = document.createElement('option');
-          option.value = preset.id;
-          option.textContent = typeof preset.label === 'string' ? preset.label : preset.id;
-          presetSelect.appendChild(option);
-        });
         if (normalizedPresets.length === 0) {
           const option = document.createElement('option');
           option.value = '';
@@ -390,7 +382,35 @@
           presetSelect.appendChild(option);
           presetSelect.disabled = true;
           applyPresetButton.disabled = true;
+          return;
         }
+
+        const groups = {
+          dark: [],
+          light: [],
+        };
+        normalizedPresets.forEach((preset) => {
+          groups[preset.mode].push(preset);
+        });
+
+        [
+          ['dark', 'Dark Themes'],
+          ['light', 'Light Themes'],
+        ].forEach(([mode, title]) => {
+          const items = groups[mode];
+          if (!items || items.length === 0) {
+            return;
+          }
+          const group = document.createElement('optgroup');
+          group.label = title;
+          items.forEach((preset) => {
+            const option = document.createElement('option');
+            option.value = preset.id;
+            option.textContent = preset.label;
+            group.appendChild(option);
+          });
+          presetSelect.appendChild(group);
+        });
       };
 
       const readPresetStyles = (preset) => {
@@ -609,8 +629,6 @@
         }
         const result = collectElementStyle(element);
         if (!result.ok) {
-          preview.note.textContent = `${result.field}: ${result.message}`;
-          preview.note.classList.add('error');
           return;
         }
 
@@ -620,8 +638,6 @@
         renderAttachment(preview.before, style.before);
         renderAttachment(preview.after, style.after);
         renderGutter(preview.gutter, style);
-        preview.note.textContent = 'Live preview';
-        preview.note.classList.remove('error');
       };
 
       const createPreview = (element) => {
@@ -650,11 +666,7 @@
         line.appendChild(target);
         line.appendChild(after);
 
-        const note = document.createElement('div');
-        note.className = 'preview-note';
-        note.textContent = 'Live preview';
-
-        return { line, gutter, before, target, after, note };
+        return { line, gutter, before, target, after };
       };
 
       const createCard = (element) => {
@@ -699,7 +711,6 @@
         card.appendChild(title);
         card.appendChild(description);
         card.appendChild(table);
-        card.appendChild(preview.note);
         cardsRoot.appendChild(card);
 
         previews.set(element, preview);
