@@ -48,27 +48,64 @@ const readBoolean = (value: unknown) => {
   return undefined;
 };
 
+const hasOwn = (target: Record<string, unknown>, key: string) =>
+  Object.prototype.hasOwnProperty.call(target, key);
+
+const resolveString = (
+  target: Record<string, unknown>,
+  keys: string[],
+  fallback: string | undefined,
+) => {
+  for (const key of keys) {
+    if (!hasOwn(target, key)) {
+      continue;
+    }
+    if (target[key] === null) {
+      return undefined;
+    }
+    return readString(target[key]);
+  }
+  return fallback;
+};
+
+const resolveBoolean = (
+  target: Record<string, unknown>,
+  key: string,
+  fallback: boolean | undefined,
+) => {
+  if (!hasOwn(target, key)) {
+    return fallback;
+  }
+  if (target[key] === null) {
+    return undefined;
+  }
+  return readBoolean(target[key]);
+};
+
 const mergeAttachmentStyle = (
   base: MarkdownAttachmentStyle | undefined,
   incoming: unknown,
 ): MarkdownAttachmentStyle | undefined => {
+  if (incoming === null) {
+    return undefined;
+  }
   if (!base && (!incoming || typeof incoming !== 'object')) {
     return undefined;
   }
   const raw = (incoming && typeof incoming === 'object' ? incoming : {}) as Record<string, unknown>;
   const merged: MarkdownAttachmentStyle = {
-    contentText: readString(raw.contentText) ?? base?.contentText,
-    contentIconPath: readString(raw.contentIconPath) ?? base?.contentIconPath,
-    border: readString(raw.border) ?? base?.border,
-    borderColor: readString(raw.borderColor) ?? base?.borderColor,
-    color: readString(raw.color) ?? base?.color,
-    background: readString(raw.background) ?? readString(raw.backgroundColor) ?? base?.background,
-    fontweight: readString(raw.fontweight) ?? readString(raw.fontWeight) ?? base?.fontweight,
-    fontstyle: readString(raw.fontstyle) ?? readString(raw.fontStyle) ?? base?.fontstyle,
-    decoration: readString(raw.decoration) ?? readString(raw.textDecoration) ?? base?.decoration,
-    margin: readString(raw.margin) ?? base?.margin,
-    width: readString(raw.width) ?? base?.width,
-    height: readString(raw.height) ?? base?.height,
+    contentText: resolveString(raw, ['contentText'], base?.contentText),
+    contentIconPath: resolveString(raw, ['contentIconPath'], base?.contentIconPath),
+    border: resolveString(raw, ['border'], base?.border),
+    borderColor: resolveString(raw, ['borderColor'], base?.borderColor),
+    color: resolveString(raw, ['color'], base?.color),
+    background: resolveString(raw, ['background', 'backgroundColor'], base?.background),
+    fontweight: resolveString(raw, ['fontweight', 'fontWeight'], base?.fontweight),
+    fontstyle: resolveString(raw, ['fontstyle', 'fontStyle'], base?.fontstyle),
+    decoration: resolveString(raw, ['decoration', 'textDecoration'], base?.decoration),
+    margin: resolveString(raw, ['margin'], base?.margin),
+    width: resolveString(raw, ['width'], base?.width),
+    height: resolveString(raw, ['height'], base?.height),
   };
   return Object.values(merged).some((value) => value !== undefined) ? merged : undefined;
 };
@@ -79,26 +116,26 @@ const mergeStyle = (base: MarkdownStyle, incoming: unknown): MarkdownStyle => {
   }
   const style = incoming as Record<string, unknown>;
   return {
-    background: readString(style.background) ?? readString(style.backgroundColor) ?? base.background,
-    color: readString(style.color) ?? base.color,
-    decoration: readString(style.decoration) ?? readString(style.textDecoration) ?? base.decoration,
-    fontweight: readString(style.fontweight) ?? readString(style.fontWeight) ?? base.fontweight,
-    fontstyle: readString(style.fontstyle) ?? readString(style.fontStyle) ?? base.fontstyle,
-    border: readString(style.border) ?? base.border,
-    borderColor: readString(style.borderColor) ?? base.borderColor,
-    borderRadius: readString(style.borderRadius) ?? base.borderRadius,
-    borderStyle: readString(style.borderStyle) ?? base.borderStyle,
-    borderWidth: readString(style.borderWidth) ?? base.borderWidth,
-    borderSpacing: readString(style.borderSpacing) ?? base.borderSpacing,
-    outline: readString(style.outline) ?? base.outline,
-    outlineColor: readString(style.outlineColor) ?? base.outlineColor,
-    outlineStyle: readString(style.outlineStyle) ?? base.outlineStyle,
-    outlineWidth: readString(style.outlineWidth) ?? base.outlineWidth,
-    opacity: readString(style.opacity) ?? base.opacity,
-    letterSpacing: readString(style.letterSpacing) ?? base.letterSpacing,
-    gutterIconPath: readString(style.gutterIconPath) ?? base.gutterIconPath,
-    gutterIconSize: readString(style.gutterIconSize) ?? base.gutterIconSize,
-    isWholeLine: readBoolean(style.isWholeLine) ?? base.isWholeLine,
+    background: resolveString(style, ['background', 'backgroundColor'], base.background),
+    color: resolveString(style, ['color'], base.color),
+    decoration: resolveString(style, ['decoration', 'textDecoration'], base.decoration),
+    fontweight: resolveString(style, ['fontweight', 'fontWeight'], base.fontweight),
+    fontstyle: resolveString(style, ['fontstyle', 'fontStyle'], base.fontstyle),
+    border: resolveString(style, ['border'], base.border),
+    borderColor: resolveString(style, ['borderColor'], base.borderColor),
+    borderRadius: resolveString(style, ['borderRadius'], base.borderRadius),
+    borderStyle: resolveString(style, ['borderStyle'], base.borderStyle),
+    borderWidth: resolveString(style, ['borderWidth'], base.borderWidth),
+    borderSpacing: resolveString(style, ['borderSpacing'], base.borderSpacing),
+    outline: resolveString(style, ['outline'], base.outline),
+    outlineColor: resolveString(style, ['outlineColor'], base.outlineColor),
+    outlineStyle: resolveString(style, ['outlineStyle'], base.outlineStyle),
+    outlineWidth: resolveString(style, ['outlineWidth'], base.outlineWidth),
+    opacity: resolveString(style, ['opacity'], base.opacity),
+    letterSpacing: resolveString(style, ['letterSpacing'], base.letterSpacing),
+    gutterIconPath: resolveString(style, ['gutterIconPath'], base.gutterIconPath),
+    gutterIconSize: resolveString(style, ['gutterIconSize'], base.gutterIconSize),
+    isWholeLine: resolveBoolean(style, 'isWholeLine', base.isWholeLine),
     before: mergeAttachmentStyle(base.before, style.before),
     after: mergeAttachmentStyle(base.after, style.after),
   };

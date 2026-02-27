@@ -4,10 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Security-Policy" content="__CSP__" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E%26%239881%3B%3C/text%3E%3C/svg%3E"
+    />
     <title>Colorful Markdown Config</title>
     <style>
       :root {
         color-scheme: light dark;
+        --cm-border: rgba(160, 160, 160, 0.4);
       }
 
       body {
@@ -18,7 +23,7 @@
       }
 
       main {
-        max-width: 1100px;
+        max-width: 1200px;
         margin: 0 auto;
         padding: 20px;
       }
@@ -66,7 +71,7 @@
 
       .cards {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        grid-template-columns: 1fr;
         gap: 12px;
       }
 
@@ -87,24 +92,102 @@
         font-size: 0.85rem;
       }
 
-      textarea {
+      .config-table {
         width: 100%;
-        min-height: 220px;
-        resize: vertical;
-        border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
-        border-radius: 6px;
-        padding: 10px;
+        border-collapse: collapse;
+        border: 1px solid var(--cm-border);
+      }
+
+      .config-table td {
+        border: 1px solid var(--cm-border);
+        padding: 6px 8px;
+      }
+
+      .field-label {
+        width: 20%;
+        font-family: var(--vscode-editor-font-family);
+        font-size: 0.85rem;
+        color: var(--vscode-descriptionForeground);
+      }
+
+      .field-input {
+        width: 30%;
+      }
+
+      .field-empty {
+        width: 50%;
+      }
+
+      .config-input {
+        width: 100%;
+        border: 1px solid var(--vscode-input-border, var(--cm-border));
+        border-radius: 4px;
+        padding: 5px 6px;
         box-sizing: border-box;
         color: var(--vscode-input-foreground);
         background: var(--vscode-input-background);
         font-family: var(--vscode-editor-font-family);
         font-size: 12px;
-        line-height: 1.35;
       }
 
-      code {
-        font-family: var(--vscode-editor-font-family);
-        color: var(--vscode-textPreformat-foreground);
+      .preview {
+        margin-top: 10px;
+        border: 1px dashed var(--cm-border);
+        border-radius: 6px;
+        padding: 8px;
+      }
+
+      .preview-title {
+        font-size: 0.85rem;
+        color: var(--vscode-descriptionForeground);
+      }
+
+      .preview-line {
+        margin-top: 6px;
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .preview-target {
+        white-space: pre-wrap;
+        line-height: 1.5;
+      }
+
+      .preview-attachment,
+      .preview-gutter {
+        white-space: pre-wrap;
+      }
+
+      .preview-note {
+        margin-top: 6px;
+        font-size: 0.8rem;
+        color: var(--vscode-descriptionForeground);
+      }
+
+      .preview-note.error {
+        color: var(--vscode-errorForeground);
+      }
+
+      .preview-icon {
+        width: 1em;
+        height: 1em;
+        object-fit: contain;
+        vertical-align: middle;
+      }
+
+      .preview-icon-badge {
+        display: inline-block;
+        border: 1px solid var(--cm-border);
+        border-radius: 10px;
+        padding: 0 6px;
+        font-size: 0.75rem;
+        line-height: 1.2;
+      }
+
+      .hidden {
+        display: none;
       }
     </style>
   </head>
@@ -112,14 +195,14 @@
     <main>
       <h1>Colorful Markdown Style Config</h1>
       <p>
-        Edit every markdown element style as JSON. Supported keys include
-        <code>background/color/decoration/fontweight/fontstyle</code>, border and outline fields, gutter
-        icon fields, plus nested <code>before</code>/<code>after</code> objects.
+        Simple options are shown by default. Use toggle advanced options to show all properties. Empty input means
+        unset.
       </p>
       <div class="actions">
         <button id="save">Save</button>
         <button id="reload" class="secondary">Reload Settings</button>
         <button id="defaults" class="secondary">Fill Defaults</button>
+        <button id="toggle-advanced" class="secondary">Toggle Advanced Options</button>
         <span id="status" class="status" role="status"></span>
       </div>
       <section id="cards" class="cards"></section>
@@ -137,16 +220,390 @@
         const saveButton = document.getElementById('save');
         const reloadButton = document.getElementById('reload');
         const defaultsButton = document.getElementById('defaults');
-        const editors = new Map();
+        const toggleAdvancedButton = document.getElementById('toggle-advanced');
 
-        const formatObject = (value) => JSON.stringify(value ?? {}, null, 2);
-
-        const setStatus = (text, isError = false) => {
-          statusNode.textContent = text;
-          statusNode.classList.toggle('error', isError);
+        const SAMPLE_TEXT = {
+          heading: '# Heading 1',
+          blockquote: '> Blockquote line',
+          list: '- List item',
+          bold: '**bold text**',
+          italic: '*italic text*',
+          strikethrough: '~~strikethrough~~',
+          link: '[link](https://example.com)',
+          inlineCode: '`const x = 1`',
+          codeFence: '```ts\nconst value = 1;\n```',
         };
 
-        const createEditor = (element) => {
+        const BASIC_TOP_LEVEL_FIELDS = new Set([
+          'background',
+          'color',
+          'decoration',
+          'fontweight',
+          'fontstyle',
+          'border',
+          'borderRadius',
+          'opacity',
+        ]);
+
+        const BASIC_ATTACHMENT_FIELDS = new Set([
+          'contentText',
+          'color',
+        ]);
+
+        const TOP_LEVEL_FIELDS = [
+          { label: 'background', path: ['background'] },
+          { label: 'color', path: ['color'] },
+          { label: 'decoration', path: ['decoration'] },
+          { label: 'fontweight', path: ['fontweight'] },
+          { label: 'fontstyle', path: ['fontstyle'] },
+          { label: 'border', path: ['border'] },
+          { label: 'borderColor', path: ['borderColor'] },
+          { label: 'borderRadius', path: ['borderRadius'] },
+          { label: 'borderStyle', path: ['borderStyle'] },
+          { label: 'borderWidth', path: ['borderWidth'] },
+          { label: 'borderSpacing', path: ['borderSpacing'] },
+          { label: 'outline', path: ['outline'] },
+          { label: 'outlineColor', path: ['outlineColor'] },
+          { label: 'outlineStyle', path: ['outlineStyle'] },
+          { label: 'outlineWidth', path: ['outlineWidth'] },
+          { label: 'opacity', path: ['opacity'] },
+          { label: 'letterSpacing', path: ['letterSpacing'] },
+          { label: 'gutterIconPath', path: ['gutterIconPath'] },
+          { label: 'gutterIconSize', path: ['gutterIconSize'] },
+          { label: 'isWholeLine', path: ['isWholeLine'], type: 'boolean' },
+        ].map((field) => ({ ...field, advanced: !BASIC_TOP_LEVEL_FIELDS.has(field.label) }));
+
+        const ATTACHMENT_FIELDS = [
+          { label: 'contentText', path: ['contentText'] },
+          { label: 'contentIconPath', path: ['contentIconPath'] },
+          { label: 'border', path: ['border'] },
+          { label: 'borderColor', path: ['borderColor'] },
+          { label: 'color', path: ['color'] },
+          { label: 'background', path: ['background'] },
+          { label: 'fontweight', path: ['fontweight'] },
+          { label: 'fontstyle', path: ['fontstyle'] },
+          { label: 'decoration', path: ['decoration'] },
+          { label: 'margin', path: ['margin'] },
+          { label: 'width', path: ['width'] },
+          { label: 'height', path: ['height'] },
+        ];
+
+        const FIELD_DEFINITIONS = TOP_LEVEL_FIELDS.concat(
+          ATTACHMENT_FIELDS.map((field) => ({
+            label: `before.${field.label}`,
+            path: ['before'].concat(field.path),
+            advanced: !BASIC_ATTACHMENT_FIELDS.has(field.label),
+          })),
+          ATTACHMENT_FIELDS.map((field) => ({
+            label: `after.${field.label}`,
+            path: ['after'].concat(field.path),
+            advanced: !BASIC_ATTACHMENT_FIELDS.has(field.label),
+          })),
+        );
+
+        const PREVIEW_STYLE_FIELDS = [
+          ['background', 'background'],
+          ['color', 'color'],
+          ['decoration', 'textDecoration'],
+          ['fontweight', 'fontWeight'],
+          ['fontstyle', 'fontStyle'],
+          ['border', 'border'],
+          ['borderColor', 'borderColor'],
+          ['borderRadius', 'borderRadius'],
+          ['borderStyle', 'borderStyle'],
+          ['borderWidth', 'borderWidth'],
+          ['borderSpacing', 'borderSpacing'],
+          ['outline', 'outline'],
+          ['outlineColor', 'outlineColor'],
+          ['outlineStyle', 'outlineStyle'],
+          ['outlineWidth', 'outlineWidth'],
+          ['opacity', 'opacity'],
+          ['letterSpacing', 'letterSpacing'],
+        ];
+
+        const PREVIEW_ATTACHMENT_FIELDS = [
+          ['border', 'border'],
+          ['borderColor', 'borderColor'],
+          ['color', 'color'],
+          ['background', 'background'],
+          ['fontweight', 'fontWeight'],
+          ['fontstyle', 'fontStyle'],
+          ['decoration', 'textDecoration'],
+          ['margin', 'margin'],
+          ['width', 'width'],
+          ['height', 'height'],
+        ];
+
+        const inputs = new Map();
+        const previews = new Map();
+        const cardStates = new Map();
+        let showAdvanced = false;
+
+        const isRecord = (value) => !!value && typeof value === 'object' && !Array.isArray(value);
+
+        const toInputKey = (element, fieldLabel) => `${element}::${fieldLabel}`;
+
+        const toStatePayload = (styles) => ({
+          styles,
+          showAdvanced,
+        });
+
+        const updateToggleAdvancedMeta = () => {
+          toggleAdvancedButton.setAttribute('aria-pressed', String(showAdvanced));
+          toggleAdvancedButton.title = showAdvanced ? 'Advanced options shown' : 'Advanced options hidden';
+        };
+
+        const clearNode = (node) => {
+          while (node.firstChild) {
+            node.removeChild(node.firstChild);
+          }
+        };
+
+        const getNested = (obj, path) => {
+          let current = obj;
+          for (const segment of path) {
+            if (!isRecord(current) || !(segment in current)) {
+              return undefined;
+            }
+            current = current[segment];
+          }
+          return current;
+        };
+
+        const setNested = (obj, path, value) => {
+          let current = obj;
+          for (let index = 0; index < path.length - 1; index += 1) {
+            const segment = path[index];
+            if (!isRecord(current[segment])) {
+              current[segment] = {};
+            }
+            current = current[segment];
+          }
+          current[path[path.length - 1]] = value;
+        };
+
+        const readFieldValue = (field, rawValue) => {
+          const value = rawValue.trim();
+          if (!value) {
+            return { unset: true };
+          }
+          if (field.type === 'boolean') {
+            const lowered = value.toLowerCase();
+            if (lowered === 'true') {
+              return { value: true };
+            }
+            if (lowered === 'false') {
+              return { value: false };
+            }
+            return { error: 'Expected true or false.' };
+          }
+          return { value };
+        };
+
+        const formatFieldValue = (field, value) => {
+          if (field.type === 'boolean') {
+            return typeof value === 'boolean' ? String(value) : '';
+          }
+          return typeof value === 'string' ? value : '';
+        };
+
+        const applyCssMapping = (node, style, mapping) => {
+          node.removeAttribute('style');
+          if (!isRecord(style)) {
+            return;
+          }
+          for (const [styleKey, cssKey] of mapping) {
+            const value = style[styleKey];
+            if (typeof value === 'string' && value.trim()) {
+              node.style[cssKey] = value.trim();
+            }
+          }
+        };
+
+        const renderAttachment = (target, attachmentStyle) => {
+          clearNode(target);
+          target.classList.add('hidden');
+          applyCssMapping(target, attachmentStyle, PREVIEW_ATTACHMENT_FIELDS);
+          if (!isRecord(attachmentStyle)) {
+            return;
+          }
+
+          const textValue = typeof attachmentStyle.contentText === 'string' ? attachmentStyle.contentText : '';
+          const iconValue = typeof attachmentStyle.contentIconPath === 'string' ? attachmentStyle.contentIconPath.trim() : '';
+
+          if (textValue) {
+            target.appendChild(document.createTextNode(textValue));
+          }
+
+          if (iconValue) {
+            if (iconValue.startsWith('http://') || iconValue.startsWith('https://') || iconValue.startsWith('data:')) {
+              const icon = document.createElement('img');
+              icon.src = iconValue;
+              icon.alt = '';
+              icon.className = 'preview-icon';
+              target.appendChild(icon);
+            }
+            const badge = document.createElement('span');
+            badge.className = 'preview-icon-badge';
+            badge.textContent = 'icon';
+            badge.title = iconValue;
+            target.appendChild(badge);
+          }
+
+          if (target.childNodes.length > 0) {
+            target.classList.remove('hidden');
+          }
+        };
+
+        const renderGutter = (target, style) => {
+          clearNode(target);
+          target.classList.add('hidden');
+          if (!isRecord(style)) {
+            return;
+          }
+          const iconPath = typeof style.gutterIconPath === 'string' ? style.gutterIconPath.trim() : '';
+          if (!iconPath) {
+            return;
+          }
+          const badge = document.createElement('span');
+          badge.className = 'preview-icon-badge';
+          badge.textContent = 'gutter icon';
+          badge.title = iconPath;
+          const iconSize = typeof style.gutterIconSize === 'string' ? style.gutterIconSize.trim() : '';
+          if (iconSize) {
+            badge.style.fontSize = iconSize;
+          }
+          target.appendChild(badge);
+          target.classList.remove('hidden');
+        };
+
+        const collectElementStyle = (element) => {
+          const style = {};
+          for (const field of FIELD_DEFINITIONS) {
+            const input = inputs.get(toInputKey(element, field.label));
+            if (!input) {
+              continue;
+            }
+            const parsed = readFieldValue(field, input.value);
+            if (parsed.error) {
+              return {
+                ok: false,
+                field: field.label,
+                message: parsed.error,
+              };
+            }
+            if (parsed.unset) {
+              setNested(style, field.path, null);
+              continue;
+            }
+            setNested(style, field.path, parsed.value);
+          }
+          return {
+            ok: true,
+            style,
+          };
+        };
+
+        const renderFieldsForElement = (element) => {
+          const state = cardStates.get(element);
+          if (!state) {
+            return;
+          }
+
+          clearNode(state.body);
+          const visibleControls = state.fieldControls.filter((control) => showAdvanced || !control.field.advanced);
+
+          for (let index = 0; index < visibleControls.length; index += 2) {
+            const row = document.createElement('tr');
+            const first = visibleControls[index];
+            const second = visibleControls[index + 1];
+
+            row.appendChild(first.labelCell);
+            row.appendChild(first.inputCell);
+
+            if (second) {
+              row.appendChild(second.labelCell);
+              row.appendChild(second.inputCell);
+            } else {
+              const empty = document.createElement('td');
+              empty.colSpan = 2;
+              empty.className = 'field-empty';
+              row.appendChild(empty);
+            }
+
+            state.body.appendChild(row);
+          }
+        };
+
+        const renderAllFieldRows = () => {
+          for (const element of markdownElements) {
+            renderFieldsForElement(element);
+          }
+          updateToggleAdvancedMeta();
+        };
+
+        const updatePreview = (element) => {
+          const preview = previews.get(element);
+          if (!preview) {
+            return;
+          }
+          const result = collectElementStyle(element);
+          if (!result.ok) {
+            preview.note.textContent = `${result.field}: ${result.message}`;
+            preview.note.classList.add('error');
+            return;
+          }
+
+          const style = result.style;
+          preview.target.textContent = SAMPLE_TEXT[element] || 'sample';
+          applyCssMapping(preview.target, style, PREVIEW_STYLE_FIELDS);
+          renderAttachment(preview.before, style.before);
+          renderAttachment(preview.after, style.after);
+          renderGutter(preview.gutter, style);
+          preview.note.textContent = 'Live preview';
+          preview.note.classList.remove('error');
+        };
+
+        const createPreview = () => {
+          const container = document.createElement('div');
+          container.className = 'preview';
+
+          const title = document.createElement('div');
+          title.className = 'preview-title';
+          title.textContent = 'Preview';
+
+          const line = document.createElement('div');
+          line.className = 'preview-line';
+
+          const gutter = document.createElement('span');
+          gutter.className = 'preview-gutter hidden';
+
+          const before = document.createElement('span');
+          before.className = 'preview-attachment hidden';
+
+          const target = document.createElement('span');
+          target.className = 'preview-target';
+
+          const after = document.createElement('span');
+          after.className = 'preview-attachment hidden';
+
+          line.appendChild(gutter);
+          line.appendChild(before);
+          line.appendChild(target);
+          line.appendChild(after);
+
+          const note = document.createElement('div');
+          note.className = 'preview-note';
+          note.textContent = 'Live preview';
+
+          container.appendChild(title);
+          container.appendChild(line);
+          container.appendChild(note);
+
+          return { container, gutter, before, target, after, note };
+        };
+
+        const createCard = (element) => {
           const card = document.createElement('article');
           card.className = 'card';
 
@@ -154,67 +611,103 @@
           title.textContent = element;
 
           const description = document.createElement('p');
-          description.textContent = 'JSON object for this markdown element.';
+          description.textContent = 'Unset any value by clearing its input.';
 
-          const textarea = document.createElement('textarea');
-          textarea.spellcheck = false;
-          textarea.dataset.element = element;
+          const table = document.createElement('table');
+          table.className = 'config-table';
+          const body = document.createElement('tbody');
+          const fieldControls = [];
+
+          for (const field of FIELD_DEFINITIONS) {
+            const labelCell = document.createElement('td');
+            labelCell.className = 'field-label';
+            labelCell.textContent = field.label;
+
+            const inputCell = document.createElement('td');
+            inputCell.className = 'field-input';
+            const input = document.createElement('input');
+            input.className = 'config-input';
+            input.type = 'text';
+            input.placeholder = 'unset';
+            input.addEventListener('input', () => {
+              updatePreview(element);
+            });
+            inputCell.appendChild(input);
+
+            inputs.set(toInputKey(element, field.label), input);
+            fieldControls.push({ field, labelCell, inputCell });
+          }
+
+          cardStates.set(element, { body, fieldControls });
+          table.appendChild(body);
+          const preview = createPreview();
 
           card.appendChild(title);
           card.appendChild(description);
-          card.appendChild(textarea);
+          card.appendChild(table);
+          card.appendChild(preview.container);
           cardsRoot.appendChild(card);
-          editors.set(element, textarea);
+
+          previews.set(element, preview);
+          renderFieldsForElement(element);
+        };
+
+        const setStatus = (text, isError = false) => {
+          statusNode.textContent = text;
+          statusNode.classList.toggle('error', isError);
         };
 
         const setStyles = (styles) => {
-          markdownElements.forEach((element) => {
-            const textarea = editors.get(element);
-            if (!textarea) {
-              return;
+          const source = isRecord(styles) ? styles : {};
+          for (const element of markdownElements) {
+            const elementStyle = isRecord(source[element]) ? source[element] : {};
+            for (const field of FIELD_DEFINITIONS) {
+              const input = inputs.get(toInputKey(element, field.label));
+              if (!input) {
+                continue;
+              }
+              const value = getNested(elementStyle, field.path);
+              input.value = formatFieldValue(field, value);
             }
-            const value = styles && typeof styles === 'object' ? styles[element] : undefined;
-            textarea.value = formatObject(value);
-          });
-          vscode.setState({ styles });
+            updatePreview(element);
+          }
+          vscode.setState(toStatePayload(source));
         };
 
         const collectStyles = () => {
           const nextStyles = {};
           for (const element of markdownElements) {
-            const textarea = editors.get(element);
-            if (!textarea) {
-              continue;
+            const result = collectElementStyle(element);
+            if (!result.ok) {
+              return {
+                ok: false,
+                element,
+                field: result.field,
+                message: result.message,
+              };
             }
-            const source = textarea.value.trim();
-            if (!source) {
-              nextStyles[element] = {};
-              continue;
-            }
-            let parsed;
-            try {
-              parsed = JSON.parse(source);
-            } catch {
-              return { ok: false, element, message: 'Invalid JSON.' };
-            }
-            if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') {
-              return { ok: false, element, message: 'Style must be a JSON object.' };
-            }
-            nextStyles[element] = parsed;
+            nextStyles[element] = result.style;
           }
-          return { ok: true, styles: nextStyles };
+          return {
+            ok: true,
+            styles: nextStyles,
+          };
         };
 
-        markdownElements.forEach((element) => createEditor(element));
+        for (const element of markdownElements) {
+          createCard(element);
+        }
 
         const state = vscode.getState();
+        showAdvanced = state && typeof state.showAdvanced === 'boolean' ? state.showAdvanced : false;
+        renderAllFieldRows();
         setStyles(state && state.styles ? state.styles : initialStyles);
         setStatus('Ready');
 
         saveButton.addEventListener('click', () => {
           const result = collectStyles();
           if (!result.ok) {
-            setStatus(`${result.element}: ${result.message}`, true);
+            setStatus(`${result.element}.${result.field}: ${result.message}`, true);
             return;
           }
           setStatus('Saving...');
@@ -229,6 +722,19 @@
         defaultsButton.addEventListener('click', () => {
           setStyles(defaultStyles);
           setStatus('Defaults loaded. Click Save to apply.');
+        });
+
+        toggleAdvancedButton.addEventListener('click', () => {
+          showAdvanced = !showAdvanced;
+          renderAllFieldRows();
+          for (const element of markdownElements) {
+            updatePreview(element);
+          }
+          const currentState = vscode.getState();
+          vscode.setState(
+            toStatePayload(currentState && isRecord(currentState.styles) ? currentState.styles : initialStyles),
+          );
+          setStatus(showAdvanced ? 'Advanced options shown.' : 'Advanced options hidden.');
         });
 
         window.addEventListener('message', (event) => {
