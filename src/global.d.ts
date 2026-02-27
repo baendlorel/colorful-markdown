@@ -1,6 +1,7 @@
-declare global {
-  type ConfigName = 'enabled' | 'styles';
-  type CommandName = 'refreshStyles';
-}
+type ConfigName = 'enabled' | 'styles';
+type CommandName = 'refreshStyles' | 'openConfig';
 
-export {};
+declare module '*.html' {
+  const value: string;
+  export default value;
+}

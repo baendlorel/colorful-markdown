@@ -40,7 +40,8 @@
   },
   "activationEvents": [
     "onLanguage:markdown",
-    "onCommand:colorful-markdown.refreshStyles"
+    "onCommand:colorful-markdown.refreshStyles",
+    "onCommand:colorful-markdown.openConfig"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -48,6 +49,11 @@
       {
         "command": "colorful-markdown.refreshStyles",
         "title": "%command.refreshStyles.title%",
+        "category": "%extension.category%"
+      },
+      {
+        "command": "colorful-markdown.openConfig",
+        "title": "%command.openConfig.title%",
         "category": "%extension.category%"
       }
     ],

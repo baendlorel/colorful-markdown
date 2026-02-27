@@ -1,6 +1,7 @@
 {
   "extension.category": "Colorful Markdown",
   "command.refreshStyles.title": "刷新 Markdown 上色",
+  "command.openConfig.title": "打开样式配置",
   "configuration.title": "Colorful Markdown",
   "configuration.enabled.description": "启用 Markdown 元素上色。",
   "configuration.styles.description": "Markdown 元素样式映射（heading、blockquote、list、bold、italic、strikethrough、link、inlineCode、codeFence）。支持 background/color/decoration/fontweight/fontstyle、border 系列、outline 系列、gutterIconPath/gutterIconSize（gutterIconPath 需绝对路径），以及嵌套 before/after 附加内容配置。"

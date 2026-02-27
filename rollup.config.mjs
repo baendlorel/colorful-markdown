@@ -1,4 +1,5 @@
 // @ts-check
+import fs from 'node:fs';
 import path from 'node:path';
 
 // plugins
@@ -28,6 +29,17 @@ const tsconfig = './tsconfig.build.json';
 const aliasOpts = {
   entries: [{ find: /^@\//, replacement: path.resolve(import.meta.dirname, 'src') + '/' }],
 };
+
+const rawImport = () => ({
+  name: 'raw-import',
+  load(id) {
+    if (!id.endsWith('.html')) {
+      return null;
+    }
+
+    return `export default ${JSON.stringify(fs.readFileSync(id, 'utf8'))};`;
+  },
+});
 
 // # main options
 
@@ -61,6 +73,7 @@ const options = [
       replace(replaceOpts),
       funcMacro(),
       constEnum(),
+      rawImport(),
       resolve(),
       commonjs(),
       typescript({ tsconfig, removeComments: false }),

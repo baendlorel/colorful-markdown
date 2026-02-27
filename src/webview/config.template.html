@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="__CSP__" />
+    <title>Colorful Markdown Config</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+
+      body {
+        margin: 0;
+        color: var(--vscode-foreground);
+        background: var(--vscode-editor-background);
+        font-family: var(--vscode-font-family);
+      }
+
+      main {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.4rem;
+      }
+
+      p {
+        margin: 8px 0 0;
+        color: var(--vscode-descriptionForeground);
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin: 18px 0;
+      }
+
+      button {
+        border: 1px solid var(--vscode-button-border, transparent);
+        border-radius: 6px;
+        padding: 6px 12px;
+        cursor: pointer;
+        color: var(--vscode-button-foreground);
+        background: var(--vscode-button-background);
+      }
+
+      button.secondary {
+        color: var(--vscode-foreground);
+        background: var(--vscode-input-background);
+      }
+
+      .status {
+        margin-left: auto;
+        color: var(--vscode-descriptionForeground);
+      }
+
+      .status.error {
+        color: var(--vscode-errorForeground);
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 12px;
+      }
+
+      .card {
+        border: 1px solid var(--vscode-panel-border);
+        border-radius: 8px;
+        padding: 12px;
+        background: color-mix(in srgb, var(--vscode-editor-background) 88%, var(--vscode-editorWidget-background) 12%);
+      }
+
+      .card h2 {
+        margin: 0 0 8px;
+        font-size: 1rem;
+      }
+
+      .card p {
+        margin: 0 0 8px;
+        font-size: 0.85rem;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 220px;
+        resize: vertical;
+        border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
+        border-radius: 6px;
+        padding: 10px;
+        box-sizing: border-box;
+        color: var(--vscode-input-foreground);
+        background: var(--vscode-input-background);
+        font-family: var(--vscode-editor-font-family);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      code {
+        font-family: var(--vscode-editor-font-family);
+        color: var(--vscode-textPreformat-foreground);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Colorful Markdown Style Config</h1>
+      <p>
+        Edit every markdown element style as JSON. Supported keys include
+        <code>background/color/decoration/fontweight/fontstyle</code>, border and outline fields, gutter
+        icon fields, plus nested <code>before</code>/<code>after</code> objects.
+      </p>
+      <div class="actions">
+        <button id="save">Save</button>
+        <button id="reload" class="secondary">Reload Settings</button>
+        <button id="defaults" class="secondary">Fill Defaults</button>
+        <span id="status" class="status" role="status"></span>
+      </div>
+      <section id="cards" class="cards"></section>
+    </main>
+
+    <script nonce="__NONCE__">
+      (() => {
+        const vscode = acquireVsCodeApi();
+        const markdownElements = __MARKDOWN_ELEMENTS__;
+        const defaultStyles = __DEFAULT_STYLES__;
+        const initialStyles = __INITIAL_STYLES__;
+
+        const cardsRoot = document.getElementById('cards');
+        const statusNode = document.getElementById('status');
+        const saveButton = document.getElementById('save');
+        const reloadButton = document.getElementById('reload');
+        const defaultsButton = document.getElementById('defaults');
+        const editors = new Map();
+
+        const formatObject = (value) => JSON.stringify(value ?? {}, null, 2);
+
+        const setStatus = (text, isError = false) => {
+          statusNode.textContent = text;
+          statusNode.classList.toggle('error', isError);
+        };
+
+        const createEditor = (element) => {
+          const card = document.createElement('article');
+          card.className = 'card';
+
+          const title = document.createElement('h2');
+          title.textContent = element;
+
+          const description = document.createElement('p');
+          description.textContent = 'JSON object for this markdown element.';
+
+          const textarea = document.createElement('textarea');
+          textarea.spellcheck = false;
+          textarea.dataset.element = element;
+
+          card.appendChild(title);
+          card.appendChild(description);
+          card.appendChild(textarea);
+          cardsRoot.appendChild(card);
+          editors.set(element, textarea);
+        };
+
+        const setStyles = (styles) => {
+          markdownElements.forEach((element) => {
+            const textarea = editors.get(element);
+            if (!textarea) {
+              return;
+            }
+            const value = styles && typeof styles === 'object' ? styles[element] : undefined;
+            textarea.value = formatObject(value);
+          });
+          vscode.setState({ styles });
+        };
+
+        const collectStyles = () => {
+          const nextStyles = {};
+          for (const element of markdownElements) {
+            const textarea = editors.get(element);
+            if (!textarea) {
+              continue;
+            }
+            const source = textarea.value.trim();
+            if (!source) {
+              nextStyles[element] = {};
+              continue;
+            }
+            let parsed;
+            try {
+              parsed = JSON.parse(source);
+            } catch {
+              return { ok: false, element, message: 'Invalid JSON.' };
+            }
+            if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') {
+              return { ok: false, element, message: 'Style must be a JSON object.' };
+            }
+            nextStyles[element] = parsed;
+          }
+          return { ok: true, styles: nextStyles };
+        };
+
+        markdownElements.forEach((element) => createEditor(element));
+
+        const state = vscode.getState();
+        setStyles(state && state.styles ? state.styles : initialStyles);
+        setStatus('Ready');
+
+        saveButton.addEventListener('click', () => {
+          const result = collectStyles();
+          if (!result.ok) {
+            setStatus(`${result.element}: ${result.message}`, true);
+            return;
+          }
+          setStatus('Saving...');
+          vscode.postMessage({ type: 'saveStyles', payload: result.styles });
+        });
+
+        reloadButton.addEventListener('click', () => {
+          setStatus('Reloading settings...');
+          vscode.postMessage({ type: 'requestStyles' });
+        });
+
+        defaultsButton.addEventListener('click', () => {
+          setStyles(defaultStyles);
+          setStatus('Defaults loaded. Click Save to apply.');
+        });
+
+        window.addEventListener('message', (event) => {
+          const message = event.data || {};
+          if (message.type === 'syncStyles') {
+            setStyles(message.payload || {});
+            setStatus('Settings reloaded.');
+            return;
+          }
+          if (message.type !== 'saveResult') {
+            return;
+          }
+          if (message.ok) {
+            setStyles(message.payload || {});
+            setStatus('Saved.');
+            return;
+          }
+          setStatus(message.message || 'Save failed.', true);
+        });
+      })();
+    </script>
+  </body>
+</html>
